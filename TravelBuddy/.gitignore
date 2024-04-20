@@ -3,6 +3,9 @@
 # dependencies
 node_modules/
 
+TravelBuddy/.env
+*.env
+
 # Expo
 .expo/
 dist/
