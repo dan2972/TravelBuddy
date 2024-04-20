@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, Animated } from 'react-native';
-import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+import { GiftedChat, Bubble, Composer } from 'react-native-gifted-chat';
 import { sendMessageToGemini } from './GeminiAPIHandler';
 
 const Chat = ({navigation}) => {
@@ -41,6 +41,24 @@ const Chat = ({navigation}) => {
 
       />
     )}
+  
+  const ChatComposer = (props) => {
+    return (
+      <Composer
+        {...props}
+        textInputProps={{
+          ...props.textInputProps,
+          blurOnSubmit: false,
+          multiline: false,
+          onSubmitEditing: () => {
+            if (props.text && props.onSend) {
+              props.onSend({ text: props.text.trim() }, true)
+            }
+          },
+        }}
+      />
+    )
+  }
 
   const onSend = useCallback((messages = []) => {
     setMessages(previousMessages => GiftedChat.append(previousMessages, messages));
@@ -72,6 +90,7 @@ const Chat = ({navigation}) => {
       isTyping={isTyping}
       shouldUpdateMessage={() => { return true; }}
       renderBubble={renderBubble}
+      renderComposer={ChatComposer}
     />
   );
 }
