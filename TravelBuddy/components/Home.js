@@ -20,7 +20,7 @@ const Home = ({navigation}) => {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#4c669f', '#ac236f', '#000000']}
+        colors={['#4c669f', '#9c437f', '#110011']}
         style={styles.gradient}
       >
         <Animated.Text style={[styles.text, {
@@ -45,7 +45,6 @@ const Home = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    color: 'white',
     alignItems: 'center',
     justifyContent: 'center',
   },
