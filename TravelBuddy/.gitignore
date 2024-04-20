@@ -5,6 +5,7 @@ node_modules/
 
 TravelBuddy/.env
 *.env
+.env
 
 # Expo
 .expo/
