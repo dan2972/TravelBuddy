@@ -15,7 +15,10 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "${EXPO_PUBLIC_MAPS_API_KEY}"
+      }
     },
     "android": {
       "adaptiveIcon": {
