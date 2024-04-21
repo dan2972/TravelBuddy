@@ -24,12 +24,14 @@ const Map = () => {
 
   // Function to search location using Google Places API
   const searchLocation = async (search) => {
-    const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY; // Replace with your actual API key
-    const apiUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(search)}&key=${apiKey}`;
+    const apiKey = process.env.EXPO_PUBLIC_MAPS_API_KEY; // Replace with your actual API key
+    console.log(apiKey);
+    const apiUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${search}&key=${apiKey}`;
 
     try {
       const response = await fetch(apiUrl);
       const json = await response.json();
+      console.log(json);
       if (json.results.length > 0) {
         setResults(json.results);
       } else {
