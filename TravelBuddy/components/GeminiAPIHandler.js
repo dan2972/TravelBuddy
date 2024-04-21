@@ -20,18 +20,30 @@ const preText = "You will now act as a chat bot for our app, TravelBuddy. \
                 This means that for example, if I ask what model you are, you will not \
                 specify that you are gemini or that you are from Google. \
                 You are a chatbot for TravelBuddy. \
+                Try to format your messages in a way that is visually appealing to a \
+                text message interface. \
                 ";
 
-const chat = model.startChat({history: [
-    {
-      role: "user",
-      parts: [{ text: preText }],
-    },
-    {
-      role: "model",
-      parts: [{ text: "Great to meet you. What would you like to know?" }],
-    },
-  ],});
+chat = null;
+
+function createChatSession(history=null) {
+  if (history) {
+    console.log("Creating gemini chat session with history");
+    chat = model.startChat({history: history});
+  } else {
+    console.log("Creating gemini chat session without history");
+    chat = model.startChat({history: [
+      {
+        role: "user",
+        parts: [{ text: preText }],
+      },
+      {
+        role: "model",
+        parts: [{ text: "Great to meet you. What would you like to know?" }],
+      },
+    ],});
+  }
+}
 
 // async function startChatSession() {
 //   // Start a new chat session
@@ -45,4 +57,8 @@ async function sendMessageToGemini(msg) {
     return text
 }
 
-export { sendMessageToGemini };
+async function getHistory() {
+    return await chat.getHistory()
+}
+
+export { createChatSession, sendMessageToGemini, getHistory };

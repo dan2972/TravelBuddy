@@ -1,13 +1,14 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, Animated } from 'react-native';
+import { View, Text, Button, Animated } from 'react-native';
 import { GiftedChat, Bubble, Composer } from 'react-native-gifted-chat';
-import { sendMessageToGemini } from './GeminiAPIHandler';
+import { createChatSession, sendMessageToGemini, getHistory } from './GeminiAPIHandler';
+import { writeJsonToFile, readJsonFromFile } from './Storage';
 
 const Chat = ({navigation}) => {
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
 
-  useEffect(() => {
+  function setDefaultMessages() {
     setMessages([
       {
         _id: 1,
@@ -15,12 +16,71 @@ const Chat = ({navigation}) => {
         createdAt: new Date(),
         user: {
           _id: 2,
-          name: 'React Native',
-          avatar: 'https://placeimg.com/140/140/any',
+          name: 'Gemini Bot',
+          avatar: 'https://placeimg.com/140/140/tech',
         },
       },
     ]);
+  }
+
+  const clearChatHistory = useCallback(() => {
+    // Clear the state
+    setDefaultMessages();
+    createChatSession();
+  
+    // Optionally, update the local storage or perform any other cleanup
+    writeJsonToFile('chat_history.json', ''); // Clear stored history
+    writeJsonToFile('chat_history_gemini.json', 'null'); // Clear any related history
   }, []);
+  
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Button
+          onPress={clearChatHistory}
+          title="Clear"
+          color='#4c669f' // Adjust color to fit your theme
+        />
+      ),
+    });
+  }, [navigation, clearChatHistory]);
+
+  useEffect(() => {
+    readJsonFromFile('chat_history.json').then((value) => {
+      if (value) {
+        console.log('Loading chat history for local message bubbles');
+        setMessages(value.data);
+      } else {
+        console.log('No chat history found for local message bubbles');
+        setDefaultMessages();
+      }
+    });
+    readJsonFromFile('chat_history_gemini.json').then((value) => {
+      if (value) {
+        createChatSession(value.data);
+      } else {
+        createChatSession();
+      }
+    });
+
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      e.preventDefault();
+      
+      getHistory().then((history) => {
+        writeJsonToFile('chat_history_gemini.json', '{ \"data\" : '+JSON.stringify(history)+'}').then(() => {
+          writeJsonToFile('chat_history.json', '{ \"data\" : '+JSON.stringify(messages)+'}').then(() => {
+            navigation.dispatch(e.data.action);
+          });
+        });
+      });
+    });
+  
+    return unsubscribe;
+  }, [navigation, messages]);
 
   const renderBubble = props => { 
     return ( 
