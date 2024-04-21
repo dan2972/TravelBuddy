@@ -30,11 +30,7 @@ const Home = ({navigation}) => {
         </Animated.Text>
 
         <Button title="Let's Get Traveling!"
-          onPress={() => navigation.navigate('Map')} 
-        />
-
-        <Button title="Chat!"
-          onPress={() => navigation.navigate('Chat')} 
+          onPress={() => navigation.navigate('MainApp')} 
         />
 
       </LinearGradient>
