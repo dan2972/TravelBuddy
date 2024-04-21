@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, Image, StyleSheet, FlatList, Text, TouchableOpacity, Alert, Pressable } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { PROVIDER_GOOGLE } from 'react-native-maps';
 import Svg, { Circle } from 'react-native-svg';
 
 const Map = () => {
+  const uniqueLocations = new Set();
   const [region, setRegion] = useState({
     latitude: 37.78825,
     longitude: -122.4324,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
+    latitudeDelta: 0.5,
+    longitudeDelta: 0.1
   });
   const [center, setCenter] = useState({
     latitude: 37.78825,
@@ -104,41 +105,27 @@ const Map = () => {
   const getPlaceFormattedAddress = (place) => {
     return place.formattedAddress;
   }
-
-  const generateLocations = async () => {
-    await setResourceMarkers([]);
+  
+  const handleGenerate = async () => {
+    setResourceMarkers([]);
     markers.map(async (marker) => {
       const apiURL = `https://places.googleapis.com/v1/places:searchNearby`;
 
-      const formData = new FormData();
-
-      formData.append("includedTypes", ["hospital"]);
-      formData.append("locationRestriction", {
-        "circle": {
-          "center": {
-            "latitude": marker.latitude,
-            "longitude": marker.longitude
-          },
-          "radius": 10000.0
-        }
-      });
-
       const formBody = {
         "includedTypes": [
-          "restaurant"
+          "hospital"
         ],
-        "maxResultCount": 10,
+        "maxResultCount": 4,
         "locationRestriction": {
           "circle": {
             "center": {
-              "latitude": 37.7937,
-              "longitude": -122.3965
+              "latitude": marker.latitude,
+              "longitude": marker.longitude
             },
-            "radius": 500
+            "radius": 10000.0
           }
         }
       };
-      formData.append("maxResultCount", 4);
 
       try {
         const response = await fetch(apiURL, {
@@ -153,34 +140,35 @@ const Map = () => {
         const data = await response.json().then((res) => {
           return res.places;
         });
-        console.log(data);
-        /*
-        data: array of places
+          /*
+          data: array of places
 
-        places: use getPlaceDisplayName, getPlaceLocation, getPlaceFormattedAddress
-        */
-
-
-        console.log(data[0].displayName.text);
-        data.map((place) => {
-          const location = getPlaceLocation(place);
-          const newResourceMarker = {
-            name: getPlaceDisplayName(place),
-            longitude: location.latitude,
-            latitude: location.longitude,
-            address: getPlaceFormattedAddress(place)
-          }
-
-          setResourceMarkers([...resourceMarkers, newResourceMarker]);
-        })
-
-        console.log(resourceMarkers)
-
+          places: use getPlaceDisplayName, getPlaceLocation, getPlaceFormattedAddress
+          */
+        await Promise.all(
+          data.map(async (place) => {
+            const name = getPlaceDisplayName(place);
+            const location = getPlaceLocation(place);
+            const address = getPlaceFormattedAddress(place);
+            if (!uniqueLocations.has(name)) {
+              uniqueLocations.add(name);
+              console.log(name);
+              
+              const newResourceMarker = {
+                name: name,
+                location: location,
+                address: address
+              };
+              await setResourceMarkers([...resourceMarkers, newResourceMarker]);
+            }
+          })
+        );
       }
       catch (error) {
         console.error('Error fetching data:', error);
       }
     })
+    console.log(resourceMarkers);
   }
 
   return (
@@ -205,7 +193,7 @@ const Map = () => {
                 cx={25}
                 cy={35}
                 r={15}
-                fill="rgba(255, 0, 0, 0.5)" // Customize fill color and opacity
+                fill="rgba(255, 0, 0, 0.8)" // Customize fill color and opacity
               />
             </Svg>
           </Marker>
@@ -229,7 +217,7 @@ const Map = () => {
                 cx={25}
                 cy={35}
                 r={15}
-                fill="rgba(255, 0, 0, 0.5)" // Customize fill color and opacity
+                fill="rgba(0, 0, 255, 0.8)" // Customize fill color and opacity
               />
             </Svg>
           </Marker>
@@ -251,7 +239,7 @@ const Map = () => {
         </Pressable>
       </View>
 
-      <Pressable style={styles.button} onPress={() => generateLocations(markers)}>
+      <Pressable style={styles.button} onPress={() => handleGenerate()}>
         <Text style={styles.buttonText}>Generate</Text>
       </Pressable>
       {searchTerm && results.length > 0 && (
