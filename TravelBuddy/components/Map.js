@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Image, StyleSheet, FlatList, Text, TouchableOpacity, Alert, Pressable } from 'react-native';
-import MapView, { Callout, Marker } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { PROVIDER_GOOGLE } from 'react-native-maps';
-import { circle } from "../assets/circle.svg";
 import Svg, { Circle } from 'react-native-svg';
 
 const Map = () => {
@@ -19,7 +18,7 @@ const Map = () => {
   const [markers, setMarkers] = useState([]); // Use an array to manage multiple markers
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState([]);
-  const [genMarkers, setGenMarkers] = useState([]);
+  const [resourceMarkers, setResourceMarkers] = useState([]);
 
   // Function to handle map press to add a new marker
   const handleMapPress = (e) => {
@@ -91,10 +90,25 @@ const Map = () => {
     );
   };
 
+  const getPlaceDisplayName = (place) => {
+    return place.displayName.text;
+  }
+
+  const getPlaceLocation = (place) => {
+    return {
+      latitude: place.location.latitude,
+      longitude: place.location.longitude
+    };
+  }
+
+  const getPlaceFormattedAddress = (place) => {
+    return place.formattedAddress;
+  }
+
   const generateLocations = async () => {
+    await setResourceMarkers([]);
     markers.map(async (marker) => {
       const apiURL = `https://places.googleapis.com/v1/places:searchNearby`;
-      console.log(marker.longitude)
 
       const formData = new FormData();
 
@@ -133,11 +147,35 @@ const Map = () => {
           headers: {
             'Content-Type': 'application/json',
             'X-Goog-Api-Key': process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
-            'X-Goog-FieldMask': "places.displayName,places.location,places.formattedAddress"
+            'X-Goog-FieldMask': "places.displayName,places.location,places.formattedAddress,places.internationalPhoneNumber"
           }
         });
-        const data = await response.json();
+        const data = await response.json().then((res) => {
+          return res.places;
+        });
         console.log(data);
+        /*
+        data: array of places
+
+        places: use getPlaceDisplayName, getPlaceLocation, getPlaceFormattedAddress
+        */
+
+
+        console.log(data[0].displayName.text);
+        data.map((place) => {
+          const location = getPlaceLocation(place);
+          const newResourceMarker = {
+            name: getPlaceDisplayName(place),
+            longitude: location.latitude,
+            latitude: location.longitude,
+            address: getPlaceFormattedAddress(place)
+          }
+
+          setResourceMarkers([...resourceMarkers, newResourceMarker]);
+        })
+
+        console.log(resourceMarkers)
+
       }
       catch (error) {
         console.error('Error fetching data:', error);
@@ -179,11 +217,23 @@ const Map = () => {
           coordinate={center}
         />
 
-        {/* {resourceMarkers.map((resourceMarker, index) => {
+        {resourceMarkers.map((resourceMarker, index) => {
           <Marker 
+            pinColor="#0000ff"
             key={index}
-          />
-        })} */}
+            coordinate={{ latitude: resourceMarker.latitude, longitude: resourceMarker.longitude }}
+          >
+            <Text style={{opacity: 0}}>''</Text>
+            <Svg height={50} width={50}>
+              <Circle
+                cx={25}
+                cy={35}
+                r={15}
+                fill="rgba(255, 0, 0, 0.5)" // Customize fill color and opacity
+              />
+            </Svg>
+          </Marker>
+        })}
       </MapView>
       <TextInput
         style={styles.searchBox}
