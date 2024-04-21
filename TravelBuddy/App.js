@@ -5,12 +5,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Home from "./components/Home";
 import Map from "./components/Map";
 import Chat from './components/Chat';
+import BottomTabNavigator from "./BottomTabNavigator";
 
 export default function App() {
   const Stack = createNativeStackNavigator();
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName='Home'>
+      {/* <Stack.Navigator initialRouteName='Home'>
         <Stack.Screen
           name='Home'
           component={Home}
@@ -23,7 +24,8 @@ export default function App() {
           name='Chat'
           component={Chat}
         />
-      </Stack.Navigator>
+      </Stack.Navigator> */}
+      <BottomTabNavigator />
     </NavigationContainer>
   ) 
 };
